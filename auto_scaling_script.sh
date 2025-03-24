@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration
-MY_CLOUD_PROJECT="assignment3-452416"      # Your GCP project ID
+MY_CLOUD_PROJECT="vcc-assignment-3-454716"      # Your GCP project ID
 REGION_ZONE="us-central1-a"                 # GCP zone
 SCALE_TRIGGER=75                            # Scaling threshold percentage
 LOAD_BALANCER_IP=""
