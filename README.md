@@ -1,195 +1,88 @@
-# Auto-Scaling Local VM to GCP with Prometheus & Grafana
+# 🚀 Auto-Scaling Local VM to Google Cloud Platform (GCP)
 
-## Overview
+This project demonstrates how to **automate resource scaling** by monitoring a **local VM's CPU usage** and provisioning additional compute resources in **Google Cloud Platform (GCP)** when the threshold exceeds **75%**.
 
-This project sets up a **local virtual machine (VM)** using **Ubuntu 24.04.1** on **VirtualBox**, monitors system resource usage with **Prometheus & Grafana**, and implements **auto-scaling** on **Google Cloud Platform (GCP)** when CPU utilization exceeds **75%**.
+## 📌 Project Overview
 
-## Features
+When the **CPU usage** on a local Virtual Machine (**VM**) exceeds **75%**, the system:  
+1. **Monitors resource utilization** using a custom script.  
+2. **Uploads web content** to Google Cloud Storage.  
+3. **Creates new VM instances** in a Managed Instance Group (**MIG**).  
+4. **Configures a Load Balancer** for distributing traffic efficiently.  
+5. **Ensures seamless scaling** of the application from local to cloud.  
 
-- **Local VM Setup**: Ubuntu VM with monitoring tools
-- **Prometheus & Grafana Integration**: Real-time resource usage visualization
-- **Auto-Scaling on GCP**: Dynamic scaling based on CPU load
-- **Sample Python Application**: For testing monitoring and scaling
 
----
+## 🛠️ Technologies Used  
 
-## 1️⃣ Prerequisites
+- **Virtualization**: VirtualBox / VMware  
+- **Monitoring Tools**: Bash Script, Prometheus (optional)  
+- **Cloud Provider**: Google Cloud Platform (GCP)  
+- **Compute Services**: Compute Engine, Managed Instance Group (MIG)  
+- **Networking**: Load Balancer, Cloud Firewall Rules  
+- **Storage**: Google Cloud Storage (GCS)  
+- **Automation**: Google Cloud SDK (`gcloud` CLI)  
 
-### **Local Machine Requirements**
+## ⚡ Features  
 
-- VirtualBox installed
-- Ubuntu 24.04.1 VM (3 CPU, 4GB RAM)
-- Internet access
+✅ **Automated Resource Monitoring** – Detects high CPU usage on local VM.  
+✅ **Seamless Auto-Scaling** – Triggers cloud instances automatically.  
+✅ **Traffic Redirection** – Routes traffic to GCP Load Balancer when scaling.  
+✅ **Cost Optimization** – Creates instances only when needed.  
+✅ **Configurable Threshold** – Set CPU usage limit for scaling (default: 75%).  
 
-### **Google Cloud Setup**
+## 📖 Step-by-Step Setup Guide  
 
-- GCP account ([Sign up here](https://cloud.google.com/))
-- `gcloud` CLI installed
-- Billing enabled
+### 🔹 1. Prerequisites  
 
----
+#### Local Machine:  
+- Install **VirtualBox** or **VMware**.  
+- Create an **Ubuntu-based VM** with **at least 2 vCPUs and 4GB RAM**.  
+- Install **Google Cloud SDK** (`gcloud`).  
 
-## 2️⃣ Setting Up the Local VM
+#### Google Cloud Setup:  
+- Create a **Google Cloud Project** and enable **Compute Engine API**.  
+- Configure **IAM roles** for auto-scaling permissions.  
+- Setup **Cloud Storage, Compute Engine, and Load Balancer**.  
 
-### **Step 1: Install Prometheus & Grafana**
+### 🔹 2. Installation & Setup  
 
-Run the following Bash script in your Ubuntu VM to install and configure Prometheus & Grafana:
+#### 🖥️ **Clone the Repository**  
+```bash
+git clone https://github.com/premoswalp09/VCC-assignment3.git
+```
+
+
+### 📝 **Update Configuration Variables**
+Edit the script file and modify:
 
 ```bash
-#!/bin/bash
-# Update system
-sudo apt update && sudo apt upgrade -y
-
-# Install dependencies
-sudo apt install -y wget curl unzip
-
-# Install Prometheus
-wget https://github.com/prometheus/prometheus/releases/latest/download/prometheus-*.linux-amd64.tar.gz
-tar -xvf prometheus-*.linux-amd64.tar.gz
-sudo mv prometheus-*/ /usr/local/prometheus
-
-# Create Prometheus config file
-cat <<EOF | sudo tee /usr/local/prometheus/prometheus.yml
-global:
-  scrape_interval: 15s
-scrape_configs:
-  - job_name: 'ubuntu_vm'
-    static_configs:
-      - targets: ['localhost:9090']
-  - job_name: 'sample_app'
-    static_configs:
-      - targets: ['localhost:5000']
-EOF
-
-# Install Grafana
-sudo apt install -y grafana
-sudo systemctl enable --now grafana-server
-
-# Start Prometheus
-/usr/local/prometheus/prometheus --config.file=/usr/local/prometheus/prometheus.yml &
+MY_CLOUD_PROJECT="your-project-id"
+REGION_ZONE="us-central1-a"
+SCALE_TRIGGER=75
 ```
 
-### **Step 2: Start Prometheus & Grafana**
+#### 🚀 Run the Auto-Scaling Script
+```bash
+
+bash auto_scaling_script.sh
+```
+
+### 🔹 3. Testing Auto-Scaling
+### 📊 1. Simulate High CPU Usage
+To test auto-scaling, apply a stress test:
 
 ```bash
-/usr/local/prometheus/prometheus --config.file=/usr/local/prometheus/prometheus.yml &
-sudo systemctl start grafana-server
+  
+  sudo apt install stress -y
+  stress -cpu 3 --timeout 100
 ```
+✔️ This should trigger new instances in GCP Compute Engine.
 
-### **Step 3: Access Grafana**
+### 🔍 2. Verify in GCP Console
+Compute Engine → Instance Groups: See new VMs being created.
+Load Balancer → Backend Services: Confirm traffic routing.
+Cloud Storage: Check uploaded web content.
 
-- Open **[http://localhost:3000](http://localhost:3000)** in your browser
-- Default login: **admin / admin**
-- Add **Prometheus** as a data source (`http://localhost:9090`)
-- Create a new **dashboard** and add visualizations
 
----
-
-## 3️⃣ Deploying Sample Python Application
-
-Create a simple Flask application to expose metrics:
-
-```bash
-pip install flask prometheus_client
-```
-
-```python
-from flask import Flask
-from prometheus_client import start_http_server, Gauge
-import random, time
-
-app = Flask(__name__)
-metric = Gauge('cpu_usage', 'CPU usage of the system')
-
-@app.route('/')
-def index():
-    return "Sample Application Running"
-
-if __name__ == "__main__":
-    start_http_server(5000)
-    while True:
-        metric.set(random.uniform(30, 90))
-        time.sleep(5)
-```
-
-Run the app:
-
-```bash
-python app.py &
-```
-
----
-
-## 4️⃣ Configuring Auto-Scaling on GCP
-
-### **Step 1: Create Instance Group with Auto-Scaling**
-
-1. Go to **GCP Console → Compute Engine → Instance Groups**
-2. Click **Create Instance Group**
-3. Choose **Managed Instance Group**
-4. Set **VM template** (Ubuntu, 2vCPUs, 4GB RAM)
-5. Enable **Auto-Scaling**:
-   - **Min instances:** 1
-   - **Max instances:** 3
-   - **CPU Utilization Target:** 75%
-6. Click **Create**
-
-### **Step 2: Install Monitoring Agent on GCP VM**
-
-Run on GCP VM:
-
-```bash
-curl -sSO https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh
-sudo bash add-monitoring-agent-repo.sh
-sudo apt update
-sudo apt install stackdriver-agent -y
-sudo systemctl restart stackdriver-agent
-```
-
----
-
-## 5️⃣ Testing Auto-Scaling
-
-### **Step 1: Simulate High CPU Usage**
-
-Run:
-
-```bash
-yes > /dev/null & yes > /dev/null & yes > /dev/null &
-```
-
-Check CPU load:
-
-```bash
-top
-```
-
-Once usage crosses **75%**, new instances will be created in **GCP Console → Compute Engine → Instance Groups**.
-
-### **Step 2: Stop CPU Load**
-
-```bash
-killall yes
-```
-
----
-
-## 📌 Conclusion
-
-This project successfully sets up **local monitoring** with **Prometheus & Grafana**, and implements **auto-scaling to GCP** when CPU usage exceeds **75%**.
-
-✅ **Next Steps:**
-
-- Add **memory & disk monitoring**
-- Use **Kubernetes (GKE)** for scaling instead of instance groups
-
-### **Contributors**
-
-- **Prem Oswal - M23AID037**
-
----
-
-## 📜 License
-
-This project is licensed under the **MIT License**.
-
+📽️ Demo Video
+📌 Watch the full setup & scaling process: [google drive video link]
