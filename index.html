@@ -2,55 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>My Auto-Scaled Site</title>
+  <title>Auto-Scaled Hybrid Cloud</title>
   <style>
     body {
       background-color: #f4f4f4;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      color: #333;
     }
     header {
-      background-color: #333;
+      background-color: #2c3e50;
       color: white;
       padding: 20px 0;
       text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .container {
       max-width: 960px;
       margin: 40px auto;
-      padding: 0 20px;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     h1 {
-      color: #333;
+      color: #2c3e50;
+      margin-top: 0;
     }
     .info {
       margin-top: 20px;
-      color: #555;
-      font-size: 0.9em;
+      padding: 15px;
+      background-color: #e8f4f8;
+      border-radius: 4px;
+      border-left: 4px solid #3498db;
+    }
+    .server-info {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 8px 12px;
+      background-color: #27ae60;
+      color: white;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .cloud {
+      background-color: #3498db;
+    }
+    .metrics {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .metrics table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .metrics table th, .metrics table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
     }
     footer {
       text-align: center;
       color: #666;
       font-size: 0.8em;
       margin-top: 40px;
-      padding-bottom: 20px;
+      padding: 20px 0;
+      background-color: #f4f4f4;
+      border-top: 1px solid #ddd;
     }
   </style>
 </head>
 <body>
   <header>
-    <h2>Welcome to My Auto-Scaled Site</h2>
+    <h2>Auto-Scaled Hybrid Cloud Demo</h2>
   </header>
 
   <div class="container">
-    <h1>Hello!</h1>
-    <p>This page is being served by an auto-scaled VM in Google Cloud.</p>
+    <h1>Welcome to the Hybrid Cloud Demo!</h1>
+    <p>This page demonstrates an auto-scaling architecture that extends from a local VM to Google Cloud Platform when load exceeds capacity thresholds.</p>
+    
     <div class="info">
- 
+      <h3>System Information</h3>
+      <p id="timestamp">Current time: <script>document.write(new Date().toLocaleString());</script></p>
+      <p class="server-info" id="server-type">Local VM</p>
+      <p>This page is part of a hybrid cloud system that demonstrates auto-scaling from a local environment to the Google Cloud Platform.</p>
+    </div>
+    
+    <div class="metrics">
+      <h3>How It Works</h3>
+      <p>The system monitors CPU and memory usage on the local VM. When usage exceeds 75%, the following happens:</p>
+      <ol>
+        <li>GCP infrastructure is provisioned automatically</li>
+        <li>Web content is synchronized to cloud storage</li>
+        <li>Load is distributed between local and cloud resources</li>
+        <li>Cloud instances can scale up or down based on demand</li>
+        <li>When load decreases, cloud resources are scaled back</li>
+      </ol>
     </div>
   </div>
 
+  <footer>
+    <p>Assignment 3 - Cloud Auto-Scaling Implementation</p>
+  </footer>
+
+  <script>
+    // For demonstration - this would normally be set server-side
+    document.addEventListener('DOMContentLoaded', function() {
+      // Update the timestamp every 5 seconds
+      setInterval(function() {
+        document.getElementById('timestamp').textContent = 'Current time: ' + new Date().toLocaleString();
+      }, 5000);
+    });
+  </script>
 </body>
 </html>
-
