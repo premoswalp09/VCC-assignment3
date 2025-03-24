@@ -54,16 +54,52 @@ log "Installing required tools..."
 sudo apt update -y
 sudo apt install -y lighttpd bc jq nginx || handle_error "Failed to install required packages" 1
 
+
 # Check and authenticate
+# Authentication and Project Setup
 log "Checking authentication..."
+
+# Check current active account
 ACTIVE_USER=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)")
-if [ -z "$ACTIVE_USER" ]; then
-  log "No active session. Logging in..."
-  gcloud auth login || handle_error "Authentication failed" 1
-else
-  log "Active session: $ACTIVE_USER"
+
+# If no active user or service account is active
+if [ -z "$ACTIVE_USER" ] || [[ "$ACTIVE_USER" == *"@"*"iam.gserviceaccount.com" ]]; then
+  log "No user session or service account active. Attempting to authenticate..."
+  
+  # Try to authenticate with a user account
+  echo "Please run the following command and follow the prompts:"
+  echo "gcloud auth login"
+  
+  # Prompt for manual intervention
+  read -p "Have you logged in? (yes/no): " LOGIN_CONFIRM
+  
+  if [[ "$LOGIN_CONFIRM" != "yes" ]]; then
+    handle_error "Manual authentication required" 1
+  fi
+  
+  # Refresh active user after login
+  ACTIVE_USER=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)")
 fi
+
+# Verify we have an active account
+if [ -z "$ACTIVE_USER" ]; then
+  handle_error "Authentication failed. No active account found." 1
+fi
+
+log "Active account: $ACTIVE_USER"
+
+# Set the project
+log "Setting project to $MY_CLOUD_PROJECT..."
 gcloud config set project $MY_CLOUD_PROJECT || handle_error "Failed to set project" 1
+
+# Additional verification
+CURRENT_PROJECT=$(gcloud config get-value project)
+if [ "$CURRENT_PROJECT" != "$MY_CLOUD_PROJECT" ]; then
+  handle_error "Failed to set project correctly. Current project: $CURRENT_PROJECT" 1
+fi
+
+log "Project successfully set to $MY_CLOUD_PROJECT"
+
 
 # Create service account if it doesn't exist
 log "Setting up service account..."
