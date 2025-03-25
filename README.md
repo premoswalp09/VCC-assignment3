@@ -1,88 +1,141 @@
-# 🚀 Auto-Scaling Local VM to Google Cloud Platform (GCP)
+# Local VM to GCP Auto-scaling Architecture 🚀💻☁️
 
-This project demonstrates how to **automate resource scaling** by monitoring a **local VM's CPU usage** and provisioning additional compute resources in **Google Cloud Platform (GCP)** when the threshold exceeds **75%**.
+## Overview 🌍📊🔧
+This project demonstrates an auto-scaling mechanism where a local Virtual Machine (VM) monitors its CPU usage and triggers instance provisioning on Google Cloud Platform (GCP) when the usage exceeds a defined threshold. 
 
-## 📌 Project Overview
+## Architecture 🏗️🖥️⚙️
+The system consists of two main environments:
+1. **Local Environment** (Ubuntu 24.04 on VirtualBox) 🏠🐧
+   - Runs a Flask application. 
+   - Monitors system resources using `psutil`. 
+   - Contains an auto-scaling trigger script that interacts with GCP. 
+   - Simulates high CPU load using `stress`. 
 
-When the **CPU usage** on a local Virtual Machine (**VM**) exceeds **75%**, the system:  
-1. **Monitors resource utilization** using a custom script.  
-2. **Uploads web content** to Google Cloud Storage.  
-3. **Creates new VM instances** in a Managed Instance Group (**MIG**).  
-4. **Configures a Load Balancer** for distributing traffic efficiently.  
-5. **Ensures seamless scaling** of the application from local to cloud.  
+2. **Google Cloud Platform (GCP) ☁️🌎**
+   - Uses Google Cloud SDK to interact with cloud services. 
+   - Creates instances from a predefined Instance Template. 
+   - Manages instance scaling through a Managed Instance Group (MIG) with an auto-scaling policy (CPU > 75%). 
 
+![Architecture Diagram](Architecture_Diagram.png) 
 
-## 🛠️ Technologies Used  
+### Explanation of the Architecture Diagram 🏗️🔍🖥️
+- **Local VM**: The environment where the Flask application runs. It includes:
+  - A **Flask application** to serve requests. 
+  - A **resource monitoring script** using `psutil` to track CPU utilization. 
+  - An **auto-scaling trigger script** that runs when CPU usage exceeds 75%, sending a request to GCP to provision new instances. 
+- **Load Testing**: The `stress` command is used to artificially increase CPU load. 
+- **Google Cloud SDK**: The interface between the local VM and GCP, allowing VM creation and management. 
+- **Instance Template**: Defines the VM configuration (machine type, boot disk, startup script, etc.). 
+- **Managed Instance Group (MIG)**: A group of VM instances that auto-scales based on CPU utilization policies. 
 
-- **Virtualization**: VirtualBox / VMware  
-- **Monitoring Tools**: Bash Script, Prometheus (optional)  
-- **Cloud Provider**: Google Cloud Platform (GCP)  
-- **Compute Services**: Compute Engine, Managed Instance Group (MIG)  
-- **Networking**: Load Balancer, Cloud Firewall Rules  
-- **Storage**: Google Cloud Storage (GCS)  
-- **Automation**: Google Cloud SDK (`gcloud` CLI)  
+## Process Flow 🔄📊💡
+1. Local VM monitors CPU usage. 
+2. When CPU usage exceeds 75%, the auto-scaling trigger script is activated. 
+3. The script provisions new VM instances on GCP using an instance template. 
+4. The Managed Instance Group (MIG) handles scaling up as needed. 
 
-## ⚡ Features  
+## Prerequisites 📝🔧✅
+- Ubuntu 24.04 running on VirtualBox. 
+- Python and required dependencies (`psutil` for resource monitoring). 
+- Google Cloud SDK installed and authenticated. 
+- A predefined GCP Instance Template for provisioning VMs. 
+- A Managed Instance Group (MIG) configured with auto-scaling based on CPU usage. 
 
-✅ **Automated Resource Monitoring** – Detects high CPU usage on local VM.  
-✅ **Seamless Auto-Scaling** – Triggers cloud instances automatically.  
-✅ **Traffic Redirection** – Routes traffic to GCP Load Balancer when scaling.  
-✅ **Cost Optimization** – Creates instances only when needed.  
-✅ **Configurable Threshold** – Set CPU usage limit for scaling (default: 75%).  
-
-## 📖 Step-by-Step Setup Guide  
-
-### 🔹 1. Prerequisites  
-
-#### Local Machine:  
-- Install **VirtualBox** or **VMware**.  
-- Create an **Ubuntu-based VM** with **at least 2 vCPUs and 4GB RAM**.  
-- Install **Google Cloud SDK** (`gcloud`).  
-
-#### Google Cloud Setup:  
-- Create a **Google Cloud Project** and enable **Compute Engine API**.  
-- Configure **IAM roles** for auto-scaling permissions.  
-- Setup **Cloud Storage, Compute Engine, and Load Balancer**.  
-
-### 🔹 2. Installation & Setup  
-
-#### 🖥️ **Clone the Repository**  
-```bash
-git clone https://github.com/premoswalp09/VCC-assignment3.git
+## Installation 🛠️📦🚀
+### 1. Install Required Packages on Linux VM 💻🐧🔧
+```sh
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip virtualenv -y
+sudo apt install stress -y
 ```
 
-
-### 📝 **Update Configuration Variables**
-Edit the script file and modify:
-
-```bash
-MY_CLOUD_PROJECT="your-project-id"
-REGION_ZONE="us-central1-a"
-SCALE_TRIGGER=75
+### 2. Clone this repository: 🏗️🔗💾
+```sh
+git clone <repository_url>
+cd <repository_folder>
 ```
 
-#### 🚀 Run the Auto-Scaling Script
-```bash
-
-bash auto_scaling_script.sh
+### 3. Create and activate a virtual environment: 🔄🐍🛠️
+```sh
+virtualenv venv
+source venv/bin/activate
 ```
 
-### 🔹 3. Testing Auto-Scaling
-### 📊 1. Simulate High CPU Usage
-To test auto-scaling, apply a stress test:
-
-```bash
-  
-  sudo apt install stress -y
-  stress -cpu 3 --timeout 100
+### 4. Install dependencies: 📦💡🚀
+```sh
+pip install -r requirements.txt
 ```
-✔️ This should trigger new instances in GCP Compute Engine.
 
-### 🔍 2. Verify in GCP Console
-Compute Engine → Instance Groups: See new VMs being created.
-Load Balancer → Backend Services: Confirm traffic routing.
-Cloud Storage: Check uploaded web content.
+### 5. Authenticate with Google Cloud: ☁️🔑🔗
+```sh
+gcloud auth login
+gcloud config set project <your_project_id>
+```
 
+## Setting Up GCP Resources ☁️🏗️📊
+### 1. Create an Instance Template 🏗️⚙️🖥️
+```sh
+gcloud compute instance-templates create auto-scale-template \
+    --machine-type e2-medium \
+    --image-family ubuntu-2004-lts \
+    --image-project ubuntu-os-cloud \
+    --boot-disk-size 20GB \
+    --tags http-server \
+    --metadata=startup-script='#! /bin/bash
+    sudo apt update
+    sudo apt install -y python3-pip
+    pip3 install flask psutil'
+```
 
-📽️ Demo Video
-📌 Watch the full setup & scaling process: [google drive video link]
+### 2. Create a Managed Instance Group 📦🔄💡
+```sh
+gcloud compute instance-groups managed create auto-scale-group \
+    --base-instance-name auto-scale-instance \
+    --size 1 \
+    --template auto-scale-template \
+    --zone us-central1-a 
+```
+
+### 3. Configure Auto-scaling Policy 📈🔥🔄
+```sh
+gcloud compute instance-groups managed set-autoscaling auto-scale-group \
+    --max-num-replicas 5 \
+    --target-cpu-utilization 0.75 \
+    --cool-down-period 60 \
+    --zone us-central1-a 
+```
+
+### 4. Allow HTTP Traffic to Instances 🌐🔓🚀
+```sh
+gcloud compute firewall-rules create allow-http \
+    --allow tcp:80 \
+    --target-tags http-server
+```
+
+## Running the Project 🚀💻🔄
+### 1. Start the Flask application: 🌐🖥️🔥
+```sh
+python app.py
+```
+
+### 2. Start the resource monitoring and auto-scaling script: 📊🔄☁️
+```sh
+python auto_scaling_script.py
+```
+
+### 3. Simulate high CPU load to trigger scaling: 💥📈🖥️
+```sh
+stress --cpu 4 --timeout 60s
+```
+
+## Future Enhancements 🔮🚀💡
+- Implement logging and alerts for better monitoring. 📊🔔
+- Add support for memory-based scaling. 📈
+- Integrate with Kubernetes for containerized scaling. 🐳📦
+
+## License 📜✅🚀
+This project is licensed under the MIT License. 🎉🔓📃
+
+## Contributors 🤝🛠️🌍
+- Prem Oswal 🎓💡🚀
+
