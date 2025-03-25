@@ -3,6 +3,9 @@
 ## Overview 🌍📊🔧
 This project demonstrates an auto-scaling mechanism where a local Virtual Machine (VM) monitors its CPU usage and triggers instance provisioning on Google Cloud Platform (GCP) when the usage exceeds a defined threshold. 
 
+## Video Demo 🌍🖥️
+### https://drive.google.com/file/d/18-DLYpHt33vd8Mq92NST774cQO-KEs9-/view?usp=sharing
+
 ## Architecture 🏗️🖥️⚙️
 The system consists of two main environments:
 1. **Local Environment** (Ubuntu 24.04 on VirtualBox) 🏠🐧
